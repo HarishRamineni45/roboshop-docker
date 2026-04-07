@@ -1,0 +1,90 @@
+services:
+  catalogue:
+    build: ./catalogue
+    image: harishramineni/catalogue:1.0.0
+    container_name: catalogue
+    depends_on:
+    - mongodb
+  user:
+    build: ./user
+    image: harishramieni/user:1.0.0
+    container_name: user
+    depends_on:
+    - redis
+    - mongodb
+  cart:
+    build: ./cart
+    image: harishramineni/cart:1.0.0
+    container_name: cart
+    depends_on:
+    - redis
+    - catalogue
+  shipping:
+    image: harishramineni/shipping:1.0.0
+    container_name: shipping
+    depends_on:
+    - mysql
+    - cart
+  payment:
+    build: ./payment
+    image: harishramineni/payment:1.0.0
+    container_name: payment
+    environment:
+    - CART_HOST: "cart"
+    - CART_PORT: "8080"
+    - USER_HOST: "user"
+    - USER_PORT: "8080"
+    - AMQP_HOST: "rabbitmq"
+    - AMQP_USER: "roboshop"
+    - AMQP_PASSWORD: "roboshop123"
+    depends_on:
+    - rabbitmq
+    - cart
+    - user
+  frontend:
+    build: ./frontend
+    image: harishramineni/frontend:1.0.0
+    container_name: frontend
+    ports:
+    - "80:80"
+    depends_on:
+    - catalogue
+    - user
+    - cart
+    - shipping
+    - payment
+  mongodb:
+    build: ./mongodb
+    image: harishramineni/mongodb:1.0.0
+    container_name: mongodb
+    volumes:
+    - /:/data/db
+  redis:
+    image: redis:7.0
+    container_name: redis
+    volumes:
+    - redis:/data
+  mysql:
+    build: ./mysql
+    image: harishramineni/mysql:1.0.0
+    container_name: mysql
+    volumes:
+    - /:/var/lib/mysql
+  rabbitmq:
+    image: rabbitmq:3
+    environment:
+    - RABBITMQ_DEFAULT_USER: roboshop
+    - RABBITMQ_DEFAULT_PASS: roboshop123
+    container_name: rabbitmq
+    volumes:
+    - rabbitmq:/var/lib/rabbitmq
+  netwoks:
+    default:
+      driver: bridge
+      name: roboshop
+      external: false
+  volumes:
+    mongodb:
+    mysql:
+    rabbitmq:
+    redis:
