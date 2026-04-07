@@ -80,7 +80,7 @@ services:
     volumes:
     - rabbitmq:/var/lib/rabbitmq
 networks:
-  default:
+   default:
     driver: bridge
     name: roboshop
     external: false # if true, you need to create network manually
